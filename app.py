@@ -18,12 +18,12 @@ if not HF_TOKEN:
 # ----------------------------
 # Hosted model (Novita provider)
 # ----------------------------
-MODEL_ID = "zai-org/GLM-4.7-Flash"
+MODEL_ID = "openai/gpt-oss-120b"
 
 client = InferenceClient(
     model=MODEL_ID,
     token=HF_TOKEN,
-    provider="novita"
+    
 )
 
 SYSTEM_PROMPT = (
