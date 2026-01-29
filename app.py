@@ -2,24 +2,29 @@ from flask import Flask, request, render_template
 from flask_cors import CORS
 from dotenv import load_dotenv
 import os
-import requests
+from huggingface_hub import InferenceClient
 
 app = Flask(__name__)
 CORS(app)
 
 # ----------------------------
-# Load HF token from .env (local) OR Render env vars
+# Load HF token
 # ----------------------------
 load_dotenv()
 HF_TOKEN = os.getenv("HF_TOKEN")
 if not HF_TOKEN:
-    raise ValueError("HF_TOKEN not found. Put HF_TOKEN=... in your .env file or Render env vars.")
+    raise ValueError("HF_TOKEN not found. Set it in .env or Render env vars.")
 
 # ----------------------------
-# Choose a hosted model
+# Hosted model (Novita provider)
 # ----------------------------
-MODEL_ID = os.getenv("MODEL_ID", "Qwen/Qwen2.5-0.5B-Instruct")
-HF_API_URL = f"https://api-inference.huggingface.co/models/{MODEL_ID}"
+MODEL_ID = "zai-org/GLM-4.7-Flash"
+
+client = InferenceClient(
+    model=MODEL_ID,
+    token=HF_TOKEN,
+    provider="novita"
+)
 
 SYSTEM_PROMPT = (
     "You are a helpful AI assistant. "
@@ -27,61 +32,11 @@ SYSTEM_PROMPT = (
     "Do not show reasoning steps."
 )
 
-# Simple global conversation memory (OK for learning/demo; not multi-user safe)
+# ----------------------------
+# Simple global memory (demo)
+# ----------------------------
 messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-MAX_TURNS = 6  # keep last 6 user/assistant pairs
-
-
-def build_prompt(msgs):
-    """
-    Convert chat messages into a plain text prompt for hosted text-generation.
-    This works across many models even if they don't support a special chat API.
-    """
-    lines = []
-    for m in msgs:
-        role = m["role"]
-        content = m["content"].strip()
-        if role == "system":
-            lines.append(f"System: {content}")
-        elif role == "user":
-            lines.append(f"User: {content}")
-        else:
-            lines.append(f"Assistant: {content}")
-    lines.append("Assistant:")
-    return "\n".join(lines)
-
-
-def call_hf_inference(prompt: str, max_new_tokens: int = 200):
-    headers = {"Authorization": f"Bearer {HF_TOKEN}"}
-    payload = {
-        "inputs": prompt,
-        "parameters": {
-            "max_new_tokens": max_new_tokens,
-            "temperature": 0.3,
-            "top_p": 0.9,
-            "return_full_text": False
-        }
-    }
-
-    r = requests.post(HF_API_URL, headers=headers, json=payload, timeout=60)
-
-    # Helpful error message if something goes wrong
-    if r.status_code != 200:
-        return f"HF API error {r.status_code}: {r.text}"
-
-    data = r.json()
-
-    # HF can return list[{"generated_text": "..."}] or dict with "error"
-    if isinstance(data, dict) and "error" in data:
-        return f"HF error: {data['error']}"
-
-    if isinstance(data, list) and len(data) > 0:
-        item = data[0]
-        if isinstance(item, dict) and "generated_text" in item:
-            return item["generated_text"].strip()
-
-    # Fallback (rare)
-    return str(data)
+MAX_TURNS = 6
 
 
 @app.route("/", methods=["GET"])
@@ -96,12 +51,23 @@ def handle_prompt():
     if not user_input:
         return "Empty input", 400
 
-    # Add user message and keep recent history
+    # Add user message + trim history
     messages.append({"role": "user", "content": user_input})
     messages[:] = [messages[0]] + messages[-(MAX_TURNS * 2 + 1):]
 
-    prompt = build_prompt(messages)
-    reply = call_hf_inference(prompt, max_new_tokens=200)
+    try:
+        # Chat completion via InferenceClient
+        response = client.chat.completions.create(
+            messages=messages,
+            max_tokens=200,
+            temperature=0.3,
+            top_p=0.9
+        )
+
+        reply = response.choices[0].message.content.strip()
+
+    except Exception as e:
+        reply = f"Inference error: {str(e)}"
 
     messages.append({"role": "assistant", "content": reply})
     return reply
@@ -117,4 +83,3 @@ def reset_chat():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-    app.run(debug=True)  # for local development
