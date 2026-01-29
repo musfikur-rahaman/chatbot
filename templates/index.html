@@ -1,51 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Musfikur Rahaman | LLM Chatbot</title>
-    <meta name="author" content="Musfikur Rahaman" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>My Chatbot</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
 
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-  </head>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
 
-  <body>
-    <main class="app">
-      <div class="chatbot">
+<body>
+  <!-- NAVBAR -->
+  <header class="nav">
+    <div class="nav-inner">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <span class="brand-text">My Chatbot</span>
+      </div>
+
+      <div class="nav-actions">
+        <!-- Theme Toggle -->
+        <button id="theme-toggle" class="btn btn-ghost" type="button" aria-label="Toggle theme">
+          <span id="theme-icon" aria-hidden="true">🌙</span>
+          <span class="hide-sm" id="theme-text">Dark</span>
+        </button>
+
+        <!-- Auth placeholders (DB later) -->
+        <button class="btn btn-ghost" type="button">Login</button>
+        <button class="btn btn-primary" type="button">Sign up</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="page">
+    <section class="chat-section">
+      <div class="chat-shell">
         <div class="chat-header">
-          <div>
-            <h1>My Chatbot</h1>
-            <p>Built by Musfikur Rahaman</p>
+          <div class="chat-header-left">
+            <div class="badge">LIVE</div>
+            <div>
+              <h2 class="chat-title">Chat</h2>
+              <p class="chat-desc">Enter to send • Shift+Enter for new line</p>
+            </div>
           </div>
 
-          <button id="new-chat-btn" type="button" title="Start a new chat">
+          <button id="new-chat-btn" class="btn btn-ghost" type="button" title="Start a new chat">
             New chat
           </button>
         </div>
 
-        <div id="messages-container"></div>
+        <div id="messages-container" class="messages" aria-live="polite"></div>
 
-        <form id="message-form" class="chat-form">
-          <textarea
-            id="message-input"
-            placeholder="Type a message… (Enter to send, Shift+Enter for new line)"
-          ></textarea>
-          <button type="submit" aria-label="Send">➤</button>
+        <form id="message-form" class="composer" autocomplete="off">
+          <textarea id="message-input" placeholder="Type a message…" rows="1"></textarea>
+          <button type="submit" class="send-btn" aria-label="Send">➤</button>
         </form>
       </div>
-    </main>
+    </section>
+  </main>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
-  </body>
+  <!-- FOOTER (name only) -->
+  <footer class="footer">
+    <div class="footer-inner footer-center">
+      © <span id="year"></span> Musfikur Rahaman
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
 </html>

@@ -3,6 +3,48 @@ const messageForm = document.getElementById("message-form");
 const messageInput = document.getElementById("message-input");
 const newChatBtn = document.getElementById("new-chat-btn");
 
+// Footer year
+document.getElementById("year").textContent = new Date().getFullYear();
+
+// Avatars (place these files in /static)
+const USER_AVATAR = "../static/user.jpeg";
+const BOT_AVATAR = "../static/Bot_logo.png";
+const ERROR_AVATAR = "../static/Error.png";
+
+/* =========================
+   THEME TOGGLE (dark/light)
+   ========================= */
+const themeToggle = document.getElementById("theme-toggle");
+const themeIcon = document.getElementById("theme-icon");
+const themeText = document.getElementById("theme-text");
+
+const applyTheme = (theme) => {
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem("theme", theme);
+
+  const isLight = theme === "light";
+  themeIcon.textContent = isLight ? "☀️" : "🌙";
+  themeText.textContent = isLight ? "Light" : "Dark";
+};
+
+// initial theme
+const savedTheme = localStorage.getItem("theme");
+if (savedTheme) {
+  applyTheme(savedTheme);
+} else {
+  const prefersLight = window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: light)").matches;
+  applyTheme(prefersLight ? "light" : "dark");
+}
+
+themeToggle.addEventListener("click", () => {
+  const current = document.documentElement.getAttribute("data-theme") || "dark";
+  applyTheme(current === "dark" ? "light" : "dark");
+});
+
+/* =========================
+   CHAT UI
+   ========================= */
 const scrollBottom = () => {
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 };
@@ -20,7 +62,6 @@ const addMessage = (text, role, img) => {
   wrap.appendChild(avatar);
   wrap.appendChild(bubble);
   messagesContainer.appendChild(wrap);
-
   scrollBottom();
 };
 
@@ -37,13 +78,20 @@ const showLoading = () => {
   wrap.appendChild(spinner);
   wrap.appendChild(text);
   messagesContainer.appendChild(wrap);
-
   scrollBottom();
   return wrap;
 };
 
+// Auto-grow textarea
+const autoGrow = () => {
+  messageInput.style.height = "auto";
+  const h = Math.min(messageInput.scrollHeight, 160);
+  messageInput.style.height = `${h}px`;
+};
+messageInput.addEventListener("input", autoGrow);
+
 const sendMessage = async (msg) => {
-  addMessage(msg, "user", "../static/user.jpeg");
+  addMessage(msg, "user", USER_AVATAR);
   const loading = showLoading();
 
   try {
@@ -57,15 +105,25 @@ const sendMessage = async (msg) => {
     loading.remove();
 
     if (!res.ok) {
-      addMessage(reply || "Server error", "error", "../static/Error.png");
+      addMessage(reply || "Server error", "error", ERROR_AVATAR);
       return;
     }
 
-    addMessage(reply, "aibot", "../static/Bot_logo.png");
+    addMessage(reply, "aibot", BOT_AVATAR);
   } catch (e) {
     loading.remove();
-    addMessage("Network/server error", "error", "../static/Error.png");
+    addMessage("Network/server error", "error", ERROR_AVATAR);
   }
+};
+
+const resetChat = async () => {
+  try {
+    await fetch("/reset", { method: "POST" });
+  } catch (e) {}
+  messagesContainer.innerHTML = "";
+  messageInput.value = "";
+  autoGrow();
+  messageInput.focus();
 };
 
 messageForm.addEventListener("submit", (e) => {
@@ -73,6 +131,7 @@ messageForm.addEventListener("submit", (e) => {
   const msg = messageInput.value.trim();
   if (!msg) return;
   messageInput.value = "";
+  autoGrow();
   sendMessage(msg);
 });
 
@@ -84,14 +143,4 @@ messageInput.addEventListener("keydown", (e) => {
   }
 });
 
-// New chat = reset backend + clear UI
-newChatBtn.addEventListener("click", async () => {
-  try {
-    await fetch("/reset", { method: "POST" });
-  } catch (e) {
-    // Even if reset fails, still clear the UI
-  }
-  messagesContainer.innerHTML = "";
-  messageInput.value = "";
-  messageInput.focus();
-});
+newChatBtn.addEventListener("click", resetChat);
