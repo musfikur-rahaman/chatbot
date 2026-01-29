@@ -12,6 +12,15 @@ const BOT_AVATAR = "../static/Bot_logo.png";
 const ERROR_AVATAR = "../static/Error.png";
 
 /* =========================
+   MOBILE KEYBOARD FIX
+   ========================= */
+const setAppHeight = () => {
+  document.documentElement.style.setProperty("--app-height", `${window.innerHeight}px`);
+};
+window.addEventListener("resize", setAppHeight);
+setAppHeight();
+
+/* =========================
    THEME TOGGLE (dark/light)
    ========================= */
 const themeToggle = document.getElementById("theme-toggle");
@@ -43,7 +52,7 @@ themeToggle.addEventListener("click", () => {
 });
 
 /* =========================
-   CHAT UI
+   CHAT HELPERS
    ========================= */
 const scrollBottom = () => {
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -89,6 +98,13 @@ const autoGrow = () => {
   messageInput.style.height = `${h}px`;
 };
 messageInput.addEventListener("input", autoGrow);
+
+// iOS/Android: ensure composer stays visible when focusing input
+messageInput.addEventListener("focus", () => {
+  setTimeout(() => {
+    messageInput.scrollIntoView({ block: "end", behavior: "smooth" });
+  }, 150);
+});
 
 const sendMessage = async (msg) => {
   addMessage(msg, "user", USER_AVATAR);
