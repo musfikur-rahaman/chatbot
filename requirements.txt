@@ -1,8 +1,5 @@
 flask
 flask-cors
 python-dotenv
-torch
-transformers
-accelerate
 gunicorn
-sentence-transformers
+requests

@@ -1,28 +1,25 @@
 from flask import Flask, request, render_template
 from flask_cors import CORS
-import json
-import os
-import torch
 from dotenv import load_dotenv
-from transformers import AutoTokenizer, AutoModelForCausalLM
+import os
+import requests
 
 app = Flask(__name__)
 CORS(app)
 
 # ----------------------------
-# Load HF token from .env
+# Load HF token from .env (local) OR Render env vars
 # ----------------------------
 load_dotenv()
 HF_TOKEN = os.getenv("HF_TOKEN")
 if not HF_TOKEN:
-    raise ValueError("HF_TOKEN not found. Put HF_TOKEN=... in your .env file.")
+    raise ValueError("HF_TOKEN not found. Put HF_TOKEN=... in your .env file or Render env vars.")
 
 # ----------------------------
-# Model config
+# Choose a hosted model
 # ----------------------------
-MODEL_ID = "Qwen/Qwen2.5-0.5B-Instruct"
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-DTYPE = torch.float16 if DEVICE == "cuda" else torch.float32
+MODEL_ID = os.getenv("MODEL_ID", "Qwen/Qwen2.5-0.5B-Instruct")
+HF_API_URL = f"https://api-inference.huggingface.co/models/{MODEL_ID}"
 
 SYSTEM_PROMPT = (
     "You are a helpful AI assistant. "
@@ -30,28 +27,61 @@ SYSTEM_PROMPT = (
     "Do not show reasoning steps."
 )
 
-# ----------------------------
-# Load model ONCE
-# ----------------------------
-tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, token=HF_TOKEN)
-
-model = AutoModelForCausalLM.from_pretrained(
-    MODEL_ID,
-    token=HF_TOKEN,
-    torch_dtype=DTYPE,
-    device_map="auto" if DEVICE == "cuda" else None
-)
-
-if DEVICE == "cpu":
-    model.to(DEVICE)
-
-model.eval()
-
-# ----------------------------
-# Conversation memory (demo/global)
-# ----------------------------
+# Simple global conversation memory (OK for learning/demo; not multi-user safe)
 messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-MAX_TURNS = 6
+MAX_TURNS = 6  # keep last 6 user/assistant pairs
+
+
+def build_prompt(msgs):
+    """
+    Convert chat messages into a plain text prompt for hosted text-generation.
+    This works across many models even if they don't support a special chat API.
+    """
+    lines = []
+    for m in msgs:
+        role = m["role"]
+        content = m["content"].strip()
+        if role == "system":
+            lines.append(f"System: {content}")
+        elif role == "user":
+            lines.append(f"User: {content}")
+        else:
+            lines.append(f"Assistant: {content}")
+    lines.append("Assistant:")
+    return "\n".join(lines)
+
+
+def call_hf_inference(prompt: str, max_new_tokens: int = 200):
+    headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "max_new_tokens": max_new_tokens,
+            "temperature": 0.3,
+            "top_p": 0.9,
+            "return_full_text": False
+        }
+    }
+
+    r = requests.post(HF_API_URL, headers=headers, json=payload, timeout=60)
+
+    # Helpful error message if something goes wrong
+    if r.status_code != 200:
+        return f"HF API error {r.status_code}: {r.text}"
+
+    data = r.json()
+
+    # HF can return list[{"generated_text": "..."}] or dict with "error"
+    if isinstance(data, dict) and "error" in data:
+        return f"HF error: {data['error']}"
+
+    if isinstance(data, list) and len(data) > 0:
+        item = data[0]
+        if isinstance(item, dict) and "generated_text" in item:
+            return item["generated_text"].strip()
+
+    # Fallback (rare)
+    return str(data)
 
 
 @app.route("/", methods=["GET"])
@@ -61,40 +91,17 @@ def home():
 
 @app.route("/chatbot", methods=["POST"])
 def handle_prompt():
-    data = json.loads(request.get_data(as_text=True))
-    user_input = data.get("prompt", "").strip()
+    data = request.get_json(force=True)
+    user_input = (data.get("prompt") or "").strip()
     if not user_input:
         return "Empty input", 400
 
+    # Add user message and keep recent history
     messages.append({"role": "user", "content": user_input})
     messages[:] = [messages[0]] + messages[-(MAX_TURNS * 2 + 1):]
 
-    prompt = tokenizer.apply_chat_template(
-        messages,
-        tokenize=False,
-        add_generation_prompt=True
-    )
-
-    inputs = tokenizer(
-        prompt,
-        return_tensors="pt",
-        truncation=True,
-        max_length=1024
-    ).to(model.device)
-
-    with torch.no_grad():
-        output_ids = model.generate(
-            **inputs,
-            max_new_tokens=256,
-            do_sample=True,
-            temperature=0.3,
-            top_p=0.9,
-            eos_token_id=tokenizer.eos_token_id,
-            pad_token_id=tokenizer.eos_token_id
-        )
-
-    new_tokens = output_ids[0][inputs["input_ids"].shape[-1]:]
-    reply = tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+    prompt = build_prompt(messages)
+    reply = call_hf_inference(prompt, max_new_tokens=200)
 
     messages.append({"role": "assistant", "content": reply})
     return reply
@@ -110,3 +117,4 @@ def reset_chat():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+    app.run(debug=True)  # for local development
