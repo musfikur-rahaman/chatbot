@@ -3,4 +3,4 @@ Flask_Cors
 torch
 torchvision
 torchaudio
-transformers==4.*
+transformers
