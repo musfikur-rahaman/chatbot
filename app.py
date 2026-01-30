@@ -233,5 +233,5 @@ def pdf_summarize():
   return jsonify({"ok": True, "final_report": final_report, "sources": ctx["sources"]}), 200
 
 if __name__ == "__main__":
-  port = int(os.getenv("PORT", "5000"))
+  port = int(os.environ.get("PORT", "5000"))
   app.run(host="0.0.0.0", port=port, debug=True)
