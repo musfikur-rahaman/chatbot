@@ -3,3 +3,12 @@ flask-cors
 python-dotenv
 gunicorn
 huggingface-hub
+
+# PDF + RAG
+pypdf
+chromadb
+sentence-transformers
+langchain
+langchain-community
+langchain-text-splitters
+supabase

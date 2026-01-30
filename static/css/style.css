@@ -126,14 +126,12 @@ body{
 }
 
 /* =========================
-   LAYOUT (Keyboard-safe)
+   LAYOUT
    ========================= */
 .page{
   max-width: 980px;
   margin: 0 auto;
   padding: 16px;
-
-  /* Fill visible viewport (keyboard safe) minus navbar and footer space */
   min-height: calc(var(--app-height) - 84px - 60px);
   display: flex;
 }
@@ -146,21 +144,18 @@ body{
 .chat-shell{
   width: 100%;
   flex: 1;
-
   border: 1px solid var(--border);
   background: var(--card);
   border-radius: var(--radius);
   overflow:hidden;
-
   display:flex;
   flex-direction:column;
   min-height: 0;
-
   box-shadow: 0 18px 60px rgba(0,0,0,0.25);
 }
 
 /* =========================
-   CHAT
+   CHAT HEADER
    ========================= */
 .chat-header{
   display:flex;
@@ -192,7 +187,54 @@ body{
 .chat-title{ font-size: 16px; }
 .chat-desc{ font-size: 12px; color: var(--muted); margin-top: 2px; }
 
-/* Messages scroll inside remaining space */
+/* Header right controls */
+.chat-header-right{
+  display:flex;
+  gap: 10px;
+  align-items:center;
+  flex-wrap: wrap;
+  justify-content:flex-end;
+}
+
+/* Select styled like button */
+#mode-select{
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  padding: 10px 38px 10px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 50%,
+    calc(100% - 12px) 50%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+#mode-select:hover{ background-color: var(--card2); }
+#mode-select:focus{
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.18);
+}
+
+@media (max-width: 700px){
+  .chat-header{ align-items:flex-start; }
+  .chat-header-right{ width: 100%; justify-content:flex-start; }
+}
+
+/* =========================
+   MESSAGES
+   ========================= */
 .messages{
   flex: 1;
   min-height: 0;
@@ -257,19 +299,16 @@ body{
 }
 @keyframes spin{ to{ transform: rotate(360deg); } }
 
-/* Composer (sticky so send button stays visible on mobile) */
+/* Composer */
 .composer{
   position: sticky;
   bottom: 0;
   z-index: 5;
-
   display:flex;
   gap: 10px;
-
   padding: 12px;
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--border);
-
   background: rgba(0,0,0,0.10);
   backdrop-filter: blur(10px);
 }
@@ -307,7 +346,7 @@ body{
 }
 
 /* =========================
-   FOOTER (name only)
+   FOOTER
    ========================= */
 .footer{
   border-top: 1px solid var(--border);
@@ -326,4 +365,49 @@ body{
   font-weight: 700;
   font-size: 13px;
   color: var(--muted);
+}
+
+/* =========================
+   MODAL (CLEAN + FIXED)
+   ========================= */
+.modal{
+  display:none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal-card{
+  width: min(420px, 100%);
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 18px 60px rgba(0,0,0,0.35);
+}
+
+.auth-form{
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+}
+
+.auth-form input{
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--input);
+  color: var(--text);
+  outline: none;
+  font-size: 14px;
+}
+
+/* show modal when aria-hidden=false */
+.modal[aria-hidden="false"]{
+  display:flex;
 }
