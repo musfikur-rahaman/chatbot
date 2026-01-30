@@ -3,59 +3,42 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Musfikur Rahaman | Chatbot</title>
+  <title>My Chatbot</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-
-  <script>
-    window.SUPABASE_URL = "{{ supabase_url }}";
-    window.SUPABASE_ANON_KEY = "{{ supabase_anon_key }}";
-  </script>
 </head>
 
 <body>
+  <!-- NAVBAR -->
   <header class="nav">
     <div class="nav-inner">
       <div class="brand">
         <span class="brand-dot"></span>
-        <span class="brand-text">Musfikur Rahaman • Chatbot</span>
+        <span class="brand-text">My Chatbot</span>
       </div>
 
       <div class="nav-actions">
+        <!-- Theme Toggle -->
         <button id="theme-toggle" class="btn btn-ghost" type="button" aria-label="Toggle theme">
           <span id="theme-icon" aria-hidden="true">🌙</span>
           <span class="hide-sm" id="theme-text">Dark</span>
         </button>
 
-        <span id="user-pill" class="btn btn-ghost" style="display:none; cursor:default;"></span>
-        <button id="login-open" class="btn btn-ghost" type="button">Login</button>
-        <button id="signup-open" class="btn btn-primary" type="button">Sign up</button>
-        <button id="logout-btn" class="btn btn-ghost" type="button" style="display:none;">Logout</button>
+        <!-- Auth placeholders (DB later) -->
+        <button class="btn btn-ghost" type="button">Login</button>
+        <button class="btn btn-primary" type="button">Sign up</button>
       </div>
     </div>
   </header>
 
-  <div id="auth-modal" class="modal" aria-hidden="true">
-    <div class="modal-card">
-      <h3 id="auth-title">Login</h3>
-      <p class="chat-desc" style="margin:6px 0 14px 0;">Use email + password</p>
-
-      <form id="auth-form" class="auth-form">
-        <input id="auth-email" type="email" placeholder="Email" required />
-        <input id="auth-password" type="password" placeholder="Password" required />
-        <button id="auth-submit" class="btn btn-primary" type="submit">Continue</button>
-        <button id="auth-cancel" class="btn btn-ghost" type="button">Cancel</button>
-      </form>
-
-      <p id="auth-error" class="chat-desc" style="margin-top:10px; color:#ef4444;"></p>
-    </div>
-  </div>
-
+  <!-- MAIN -->
   <main class="page">
     <section class="chat-section">
       <div class="chat-shell">
@@ -65,41 +48,25 @@
             <div>
               <h2 class="chat-title">Chat</h2>
               <p class="chat-desc">Enter to send • Shift+Enter for new line</p>
-              <p class="chat-desc" id="pdf-status">PDFs: not indexed</p>
             </div>
           </div>
 
-          <div class="chat-header-right">
-            <select id="mode-select" class="btn btn-ghost" disabled>
-              <option value="chat">Chat mode</option>
-              <option value="pdf">Ask PDFs mode</option>
-            </select>
-
-            <label id="upload-btn" class="btn btn-ghost" style="cursor:pointer; display:none;">
-              Upload PDFs
-              <input id="pdf-input" type="file" accept="application/pdf" multiple hidden />
-            </label>
-
-            <button id="summarize-btn" class="btn btn-ghost" type="button" style="display:none;" disabled>
-              Summarize PDFs
-            </button>
-
-            <button id="new-chat-btn" class="btn btn-ghost" type="button" disabled>
-              New chat
-            </button>
-          </div>
+          <button id="new-chat-btn" class="btn btn-ghost" type="button" title="Start a new chat">
+            New chat
+          </button>
         </div>
 
         <div id="messages-container" class="messages" aria-live="polite"></div>
 
         <form id="message-form" class="composer" autocomplete="off">
-          <textarea id="message-input" placeholder="Login to start…" rows="1" disabled></textarea>
-          <button type="submit" class="send-btn" aria-label="Send" disabled>➤</button>
+          <textarea id="message-input" placeholder="Type a message…" rows="1"></textarea>
+          <button type="submit" class="send-btn" aria-label="Send">➤</button>
         </form>
       </div>
     </section>
   </main>
 
+  <!-- FOOTER (name only) -->
   <footer class="footer">
     <div class="footer-inner footer-center">
       © <span id="year"></span> Musfikur Rahaman
