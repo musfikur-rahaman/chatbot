@@ -128,10 +128,5 @@ def health():
 # App entry
 # ----------------------------
 if __name__ == "__main__":
-<<<<<<< HEAD
-  port = int(os.environ.get("PORT", "5000"))
-  app.run(host="0.0.0.0", port=port, debug=True)
-=======
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
->>>>>>> 34be852 (no rag update)
