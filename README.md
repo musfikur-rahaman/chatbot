@@ -1,6 +1,12 @@
 # AI Chatbot — Flask + Hugging Face Inference
 
+<img src="static/Bot_logo.png" width="120" alt="Chatbot logo">
+
 A lightweight web chatbot: a Flask backend with a clean chat UI, powered by the Hugging Face Inference API. No GPU required — the model runs server-side on HF infrastructure.
+
+## Architecture
+
+![Chatbot architecture](assets/chatbot_architecture.png)
 
 ## Features
 
@@ -59,3 +65,4 @@ gunicorn app:app --bind 0.0.0.0:$PORT
 ## Author
 
 Musfikur Rahaman — PhD student, UA Little Rock
+
